@@ -2,9 +2,11 @@
 import argparse
 import base64
 import json
+import os
 
 import ddddocr
-from flask import Flask, request
+import requests
+from flask import Flask, request, jsonify, make_response, send_from_directory
 
 parser = argparse.ArgumentParser(description="使用ddddocr搭建的最简api服务")
 parser.add_argument("-p", "--port", type=int, default=9898)
@@ -16,7 +18,7 @@ args = parser.parse_args()
 
 app = Flask(__name__)
 
-
+# ddddocr
 class Server(object):
     def __init__(self, ocr=True, det=False, old=False):
         self.ocr_option = ocr
@@ -66,17 +68,22 @@ server = Server(ocr=args.ocr, det=args.det, old=args.old)
 
 def get_img(request, img_type='file', img_name='image'):
     if img_type == 'b64':
-        img = base64.b64decode(request.get_data()) # 
+        img = base64.b64decode(request.get_data())
         try: # json str of multiple images
             dic = json.loads(img)
             img = base64.b64decode(dic.get(img_name).encode())
         except Exception as e: # just base64 of single image
             pass
-    else:
+    if img_type == 'file':
         img = request.files.get(img_name).read()
     return img
 
-
+def getImgContent(method,url,headers,cookies,data='',allow_redirects=True):
+    if method == 'GET':
+        response = requests.get(url=url,headers=headers,cookies=cookies,allow_redirects=allow_redirects).content
+    elif method == 'POST':
+        response = requests.post(url=url,data=data,headers=headers,cookies=cookies,allow_redirects=allow_redirects).content
+    return response
 def set_ret(result, ret_type='text'):
     if ret_type == 'json':
         if isinstance(result, Exception):
@@ -96,6 +103,7 @@ def set_ret(result, ret_type='text'):
 def ocr(opt, img_type='file', ret_type='text'):
     try:
         img = get_img(request, img_type)
+        print(img)
         if opt == 'ocr':
             result = server.classification(img)
         elif opt == 'det':
@@ -121,6 +129,83 @@ def slide(algo_type='compare', img_type='file', ret_type='text'):
 def ping():
     return "pong"
 
+# tts
+voiceMap = {
+    "xiaoxiao": "zh-CN-XiaoxiaoNeural",
+    "xiaoyi": "zh-CN-XiaoyiNeural",
+    "yunjian": "zh-CN-YunjianNeural",
+    "yunxi": "zh-CN-YunxiNeural",
+    "yunxia": "zh-CN-YunxiaNeural",
+    "yunyang": "zh-CN-YunyangNeural",
+    "xiaobei": "zh-CN-liaoning-XiaobeiNeural",
+    "xiaoni": "zh-CN-shaanxi-XiaoniNeural",
+    "hiugaai": "zh-HK-HiuGaaiNeural",
+    "hiumaan": "zh-HK-HiuMaanNeural",
+    "wanlung": "zh-HK-WanLungNeural",
+    "hsiaochen": "zh-TW-HsiaoChenNeural",
+    "hsioayu": "zh-TW-HsiaoYuNeural",
+    "yunjhe": "zh-TW-YunJheNeural",
+}
+
+
+def getVoiceById(voiceId):
+    return voiceMap.get(voiceId)
+
+
+# 删除html标签
+def remove_html(string):
+    regex = re.compile(r'<[^>]+>')
+    return regex.sub('', string)
+
+
+def createAudio(text, file_name, voiceId):
+    new_text = remove_html(text)
+    print(f"Text without html tags: {new_text}")
+    voice = getVoiceById(voiceId)
+    if not voice:
+        return "error params"
+
+    pwdPath = os.getcwd()
+    filePath = pwdPath + "/" + file_name
+    dirPath = os.path.dirname(filePath)
+    if not os.path.exists(dirPath):
+        os.makedirs(dirPath)
+    if not os.path.exists(filePath):
+        # 用open创建文件 兼容mac
+        open(filePath, 'a').close()
+
+    script = 'edge-tts --voice ' + voice + ' --text "' + new_text + '" --write-media ' + filePath
+    os.system(script)
+    # 上传到腾讯云COS云存储
+    # uploadCos(filePath, file_name)
+    return filePath
+
+
+def getParameter(paramName):
+    if request.args.__contains__(paramName):
+        return request.args[paramName]
+    return ""
+
+@app.route('/dealAudio',methods=['POST','GET'])
+def dealAudio():
+    file_name = 'output.mp3'
+    text = getParameter('text')
+    file_name = getParameter('file_name')
+    voice = getParameter('voice')
+    filePath = createAudio(text, file_name, voice)
+    r = os.path.split(filePath)
+    print(r)
+    try:
+        response = make_response(
+            send_from_directory(r[0], file_name, as_attachment=True))
+        return response
+    except Exception as e:
+        return jsonify({"code": "异常", "message": "{}".format(e)})
+
+
+@app.route('/tts')
+def index():
+    return 'welcome to my tts!'
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=args.port)
