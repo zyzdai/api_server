@@ -3,7 +3,7 @@ import argparse
 import base64
 import json
 import os
-
+import re
 import ddddocr
 import requests
 from flask import Flask, request, jsonify, make_response, send_from_directory
