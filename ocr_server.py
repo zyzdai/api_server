@@ -158,10 +158,11 @@ def remove_html(string):
     return regex.sub('', string)
 
 
-def createAudio(text, file_name, voiceId):
+def createAudio(text, file_name, voiceId,rate):
     new_text = remove_html(text)
     print(f"Text without html tags: {new_text}")
     voice = getVoiceById(voiceId)
+    rate = f"+{rate}%"
     if not voice:
         return "error params"
 
@@ -174,7 +175,7 @@ def createAudio(text, file_name, voiceId):
         # 用open创建文件 兼容mac
         open(filePath, 'a').close()
 
-    script = 'edge-tts --voice ' + voice + ' --text "' + new_text + '" --write-media ' + filePath
+    script = 'edge-tts --rate='+rate+' --voice ' + voice + ' --text "' + new_text + '" --write-media ' + filePath
     os.system(script)
     # 上传到腾讯云COS云存储
     # uploadCos(filePath, file_name)
@@ -188,11 +189,11 @@ def getParameter(paramName):
 
 @app.route('/dealAudio',methods=['POST','GET'])
 def dealAudio():
-    file_name = 'output.mp3'
     text = getParameter('text')
     file_name = getParameter('file_name')
     voice = getParameter('voice')
-    filePath = createAudio(text, file_name, voice)
+    rate = getParameter('rate')
+    filePath = createAudio(text, file_name, voice,rate)
     r = os.path.split(filePath)
     print(r)
     try:
