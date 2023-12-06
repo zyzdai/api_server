@@ -6,9 +6,7 @@ COPY ./*.txt ./*.py ./*.sh ./*.onnx /app/
 
 
 RUN cd /app \
-    && apt-get upgrade -y\
-    && apt-get install sudo -y\
-    && sudo apt install unrar -y
+    && apt-get install unrar -y
 
 WORKDIR /app
 
