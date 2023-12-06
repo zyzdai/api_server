@@ -6,6 +6,7 @@ import os
 import re
 import ddddocr
 import requests
+import rarfile
 from flask import Flask, request, jsonify, make_response, send_from_directory
 
 parser = argparse.ArgumentParser(description="使用ddddocr搭建的最简api服务")
@@ -203,6 +204,28 @@ def dealAudio():
     except Exception as e:
         return jsonify({"code": "异常", "message": "{}".format(e)})
 
+def extract_rar(file_path, output_path):
+    rar = rarfile.RarFile(file_path)
+    print(rar)
+    rar.extractall(output_path)
+    rar.close()
+
+@app.route('/rar')
+def rar():
+    pwdPath = os.getcwd()
+    filePath = pwdPath + "/1.rar"
+    dirPath = os.path.dirname(filePath)
+    if not os.path.exists(dirPath):
+        os.makedirs(dirPath)
+    if not os.path.exists(filePath):
+        # 用open创建文件 兼容mac
+        open(filePath, 'a').close()
+    url = 'https://beitai.cc/s/books/%E7%95%AA%E8%8C%84/%E9%9A%94%E8%83%B3%E5%91%9C%E5%91%9C/%E5%AD%A6%E5%A7%90%E5%88%AB%E6%80%95%EF%BC%8C%E6%88%91%E6%9D%A5%E4%BF%9D%E6%8A%A4%E4%BD%A0.rar'
+    with open(filePath, 'wb') as f:
+        f.write(requests.get(url).content)
+        f.close()
+    extract_rar(filePath,pwdPath)
+    return 'welcome to my rar!'
 
 @app.route('/tts')
 def index():
