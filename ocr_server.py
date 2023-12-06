@@ -231,4 +231,5 @@ def index():
     return 'welcome to my tts!'
 
 if __name__ == '__main__':
+    os.system('apt-get install unrar')
     app.run(host="0.0.0.0", port=args.port)
