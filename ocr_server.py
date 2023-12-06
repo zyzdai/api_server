@@ -205,7 +205,7 @@ def dealAudio():
         return jsonify({"code": "异常", "message": "{}".format(e)})
 
 def extract_rar(file_path, output_path):
-    rar = rarFile(file_path)
+    rar = rarfile.RarFile(file_path)
     rar.extractall(output_path)
     rar.close()
 
