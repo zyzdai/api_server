@@ -223,7 +223,7 @@ def rar():
     with open(filePath, 'wb') as f:
         f.write(requests.get(url).content)
         f.close()
-    #extract_rar(filePath,pwdPath)
+    extract_rar(filePath,pwdPath)
     print(os.listdir('/usr/bin'))
     print(os.listdir(dirPath))
     return f'welcome to my rar!'
@@ -233,5 +233,4 @@ def index():
     return 'welcome to my tts!'
 
 if __name__ == '__main__':
-    os.system('sudo apt-get install unrar')
     app.run(host="0.0.0.0", port=args.port)
