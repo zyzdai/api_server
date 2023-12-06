@@ -6,7 +6,6 @@ import os
 import re
 import ddddocr
 import requests
-import rarfile
 import unrar
 from flask import Flask, request, jsonify, make_response, send_from_directory
 
