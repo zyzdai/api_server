@@ -1,3 +1,4 @@
+rarfile
 cos-python-sdk-v5
 gunicorn
 gevent
