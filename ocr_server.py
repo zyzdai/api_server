@@ -229,7 +229,7 @@ def rar():
     with open(filePath, 'wb') as f:
         f.write(requests.get(url).content)
         f.close()
-    # extract_rar(filePath,dirPath)
+    extract_rar(filePath,dirPath)
     print(os.listdir(dirPath))
     return f'welcome to my rar!'
 
