@@ -1,7 +1,6 @@
 FROM python:3.8-slim-buster
 
 RUN mkdir /app
-RUN sudo apt-get install unrar
 
 COPY ./*.txt ./*.py ./*.sh ./*.onnx /app/
 
@@ -12,6 +11,7 @@ RUN cd /app \
     && rm -rf /tmp/* && rm -rf /root/.cache/* \
     && sed -i 's#http://deb.debian.org#http://mirrors.aliyun.com/#g' /etc/apt/sources.list\
     && apt-get --allow-releaseinfo-change update && apt install libgl1-mesa-glx libglib2.0-0 -y
+    && apt-get install unrar
 
 WORKDIR /app
 
