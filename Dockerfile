@@ -1,7 +1,7 @@
 FROM python:3.8-slim-buster
 
 RUN mkdir /app
-RUN apt-get update && apt-get install unrar
+RUN apt-get install unrar
 
 COPY ./*.txt ./*.py ./*.sh ./*.onnx /app/
 
