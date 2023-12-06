@@ -6,7 +6,7 @@ COPY ./*.txt ./*.py ./*.sh ./*.onnx /app/
 
 
 RUN cd /app \
-    && apt install rar
+    && apt install unrar
 
 WORKDIR /app
 
