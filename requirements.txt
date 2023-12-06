@@ -1,4 +1,5 @@
 rarfile
+unrar
 cos-python-sdk-v5
 gunicorn
 gevent
