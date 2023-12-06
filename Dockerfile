@@ -13,7 +13,7 @@ RUN cd /app \
     && apt-get --allow-releaseinfo-change update\
     && apt install libgl1-mesa-glx libglib2.0-0 -y\
     && apt-get upgrade -y\
-    && sudo apt install unrar
+    && sudo apt-get install unrar
 
 WORKDIR /app
 
