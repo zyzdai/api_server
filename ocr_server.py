@@ -211,14 +211,8 @@ def extract_rar(file_path, output_path):
 
 @app.route('/rar')
 def rar():
-    if not os.path.exists("./unrar"):
-        print("存在")
-    else:
-        print("不存在")
-        
-    
     pwdPath = os.getcwd()
-    filePath = pwdPath + "/1.rar"
+    filePath = pwdPath + "/2.rar"
     dirPath = os.path.dirname(filePath)
     if not os.path.exists(dirPath):
         os.makedirs(dirPath)
@@ -229,9 +223,10 @@ def rar():
     with open(filePath, 'wb') as f:
         f.write(requests.get(url).content)
         f.close()
-    extract_rar(filePath,dirPath)
+    
     print(os.listdir(dirPath))
-    return f'welcome to my rar!'
+    extract_rar(filePath,dirPath)
+    return f'welcome to my rar!{os.listdir(dirPath)}'
 
 @app.route('/tts')
 def index():
