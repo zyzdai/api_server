@@ -6,7 +6,7 @@ import os
 import re
 import ddddocr
 import requests
-import unrar
+from unrar import rarFile
 from flask import Flask, request, jsonify, make_response, send_from_directory
 
 parser = argparse.ArgumentParser(description="使用ddddocr搭建的最简api服务")
@@ -205,7 +205,7 @@ def dealAudio():
         return jsonify({"code": "异常", "message": "{}".format(e)})
 
 def extract_rar(file_path, output_path):
-    rar = unrar.RarFile(file_path)
+    rar = rarFile(file_path)
     rar.extractall(output_path)
     rar.close()
 
@@ -223,13 +223,15 @@ def rar():
     with open(filePath, 'wb') as f:
         f.write(requests.get(url).content)
         f.close()
-    extract_rar(filePath,pwdPath)
-    return f'welcome to my rar!{filePath}'
+    #extract_rar(filePath,pwdPath)
+    print(os.listdir('/usr/bin'))
+    print(os.listdir(dirPath))
+    return f'welcome to my rar!'
 
 @app.route('/tts')
 def index():
     return 'welcome to my tts!'
 
 if __name__ == '__main__':
-    os.system('apt-get install unrar')
+    os.system('sudo apt-get install unrar')
     app.run(host="0.0.0.0", port=args.port)
