@@ -224,8 +224,8 @@ def rar():
     with open(filePath, 'wb') as f:
         f.write(requests.get(url).content)
         f.close()
-    #extract_rar(filePath,pwdPath)
-    return f'welcome to my rar!{len(filePath)}'
+    extract_rar(filePath,pwdPath)
+    return f'welcome to my rar!{filePath}'
 
 @app.route('/tts')
 def index():
