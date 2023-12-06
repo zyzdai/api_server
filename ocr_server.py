@@ -4,11 +4,14 @@ import base64
 import json
 import os
 import re
+import zipfile
+
 import ddddocr
 import requests
 import rarfile
 from flask import Flask, request, jsonify, make_response, send_from_directory
-rarfile.UNRAR_TOOL="./unrar"
+
+rarfile.UNRAR_TOOL = "./unrar"
 parser = argparse.ArgumentParser(description="使用ddddocr搭建的最简api服务")
 parser.add_argument("-p", "--port", type=int, default=9898)
 parser.add_argument("--ocr", action="store_true", help="开启ocr识别")
@@ -18,6 +21,7 @@ parser.add_argument("--det", action="store_true", help="开启目标检测")
 args = parser.parse_args()
 
 app = Flask(__name__)
+
 
 # ddddocr
 class Server(object):
@@ -64,27 +68,32 @@ class Server(object):
         else:
             raise Exception(f"不支持的滑块算法类型: {algo_type}")
 
+
 server = Server(ocr=args.ocr, det=args.det, old=args.old)
 
 
 def get_img(request, img_type='file', img_name='image'):
     if img_type == 'b64':
         img = base64.b64decode(request.get_data())
-        try: # json str of multiple images
+        try:  # json str of multiple images
             dic = json.loads(img)
             img = base64.b64decode(dic.get(img_name).encode())
-        except Exception as e: # just base64 of single image
+        except Exception as e:  # just base64 of single image
             pass
     if img_type == 'file':
         img = request.files.get(img_name).read()
     return img
 
-def getImgContent(method,url,headers,cookies,data='',allow_redirects=True):
+
+def getImgContent(method, url, headers, cookies, data='', allow_redirects=True):
     if method == 'GET':
-        response = requests.get(url=url,headers=headers,cookies=cookies,allow_redirects=allow_redirects).content
+        response = requests.get(url=url, headers=headers, cookies=cookies, allow_redirects=allow_redirects).content
     elif method == 'POST':
-        response = requests.post(url=url,data=data,headers=headers,cookies=cookies,allow_redirects=allow_redirects).content
+        response = requests.post(url=url, data=data, headers=headers, cookies=cookies,
+                                 allow_redirects=allow_redirects).content
     return response
+
+
 def set_ret(result, ret_type='text'):
     if ret_type == 'json':
         if isinstance(result, Exception):
@@ -115,6 +124,7 @@ def ocr(opt, img_type='file', ret_type='text'):
     except Exception as e:
         return set_ret(e, ret_type)
 
+
 @app.route('/slide/<algo_type>/<img_type>', methods=['POST'])
 @app.route('/slide/<algo_type>/<img_type>/<ret_type>', methods=['POST'])
 def slide(algo_type='compare', img_type='file', ret_type='text'):
@@ -126,9 +136,11 @@ def slide(algo_type='compare', img_type='file', ret_type='text'):
     except Exception as e:
         return set_ret(e, ret_type)
 
+
 @app.route('/ping', methods=['GET'])
 def ping():
     return "pong"
+
 
 # tts
 voiceMap = {
@@ -159,7 +171,7 @@ def remove_html(string):
     return regex.sub('', string)
 
 
-def createAudio(text, file_name, voiceId,rate):
+def createAudio(text, file_name, voiceId, rate):
     new_text = remove_html(text)
     print(f"Text without html tags: {new_text}")
     voice = getVoiceById(voiceId)
@@ -176,7 +188,7 @@ def createAudio(text, file_name, voiceId,rate):
         # 用open创建文件 兼容mac
         open(filePath, 'a').close()
 
-    script = 'edge-tts --rate='+rate+' --voice ' + voice + ' --text "' + new_text + '" --write-media ' + filePath
+    script = 'edge-tts --rate=' + rate + ' --voice ' + voice + ' --text "' + new_text + '" --write-media ' + filePath
     os.system(script)
     # 上传到腾讯云COS云存储
     # uploadCos(filePath, file_name)
@@ -188,13 +200,14 @@ def getParameter(paramName):
         return request.args[paramName]
     return ""
 
-@app.route('/dealAudio',methods=['POST','GET'])
+
+@app.route('/dealAudio', methods=['POST', 'GET'])
 def dealAudio():
     text = getParameter('text')
     file_name = getParameter('file_name')
     voice = getParameter('voice')
     rate = getParameter('rate')
-    filePath = createAudio(text, file_name, voice,rate)
+    filePath = createAudio(text, file_name, voice, rate)
     r = os.path.split(filePath)
     print(r)
     try:
@@ -204,33 +217,57 @@ def dealAudio():
     except Exception as e:
         return jsonify({"code": "异常", "message": "{}".format(e)})
 
-def extract_rar(file_path, output_path):
-    rar = rarfile.RarFile(file_path)
-    rar.extractall(output_path)
+
+def rar2zip(rar_file):
+    rar = rarfile.RarFile(rar_file)
+    rar.extractall(os.getcwd() + '/')
     rar.close()
+    namelist = rar.namelist()
+    print(namelist)
+    zip_file = 'tmp.zip'
+    compress_files_to_zip(namelist, zip_file)
+    for file in namelist:
+        os.remove(file)
+    return zip_file
+
+
+def compress_files_to_zip(file_paths, zip_file_path):
+    with zipfile.ZipFile(zip_file_path, 'w') as zipf:
+        for file_path in file_paths:
+            zipf.write(file_path)
+
 
 @app.route('/rar')
 def rar():
+    rarurl = getParameter('rarurl')
     pwdPath = os.getcwd()
-    filePath = pwdPath + "/2.rar"
+    filePath = pwdPath + "/temp.rar"
     dirPath = os.path.dirname(filePath)
     if not os.path.exists(dirPath):
         os.makedirs(dirPath)
     if not os.path.exists(filePath):
         # 用open创建文件 兼容mac
         open(filePath, 'a').close()
-    url = 'https://beitai.cc/s/books/%E7%95%AA%E8%8C%84/%E9%9A%94%E8%83%B3%E5%91%9C%E5%91%9C/%E5%AD%A6%E5%A7%90%E5%88%AB%E6%80%95%EF%BC%8C%E6%88%91%E6%9D%A5%E4%BF%9D%E6%8A%A4%E4%BD%A0.rar'
+    print(rarurl)
     with open(filePath, 'wb') as f:
-        f.write(requests.get(url).content)
+        f.write(requests.get(rarurl).content)
         f.close()
-    
-    print(os.listdir(dirPath))
-    extract_rar(filePath,dirPath)
-    return f'welcome to my rar!{os.listdir(dirPath)}'
+
+    zipName = rar2zip(filePath)
+    r = os.path.split(filePath)
+    print(r)
+    try:
+        response = make_response(
+            send_from_directory(r[0], zipName, as_attachment=True))
+        return response
+    except Exception as e:
+        return jsonify({"code": "异常", "message": "{}".format(e)})
+
 
 @app.route('/tts')
 def index():
     return 'welcome to my tts!'
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=args.port)
