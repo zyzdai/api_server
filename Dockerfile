@@ -12,7 +12,7 @@ RUN cd /app \
     && sed -i 's#http://deb.debian.org#http://mirrors.aliyun.com/#g' /etc/apt/sources.list\
     && apt-get --allow-releaseinfo-change update\
     && apt install libgl1-mesa-glx libglib2.0-0 -y\
-    && apt-get upgrade\
+    && apt-get upgrade -y\
     && apt-get install unrar
 
 WORKDIR /app
