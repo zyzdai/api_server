@@ -203,7 +203,11 @@ def getParameter(paramName):
 @app.route('/dealAudio', methods=['POST', 'GET'])
 def dealAudio():
     text = getParameter('text')
+    if len(text)<=0:
+        return jsonify({"code": "异常", "message": "text参数不能为空"})
     file_name = getParameter('file_name')
+    if len(file_name)<=0:
+        return jsonify({"code": "异常", "message": "filename参数不能为空"})
     voice = getParameter('voice')
     rate = getParameter('rate')
     filePath = createAudio(text, file_name, voice, rate)
@@ -236,10 +240,14 @@ def compress_files_to_zip(file_paths, zip_file_path):
             zipf.write(file_path)
 
 
-@app.route('/rar')
-def rar():
+@app.route('/rar2zip')
+def r2z():
     rarurl = getParameter('rarurl')
+    if len(rarurl)<=0 or rarurl.find('http')==-1:
+        return jsonify({"code": "异常", "message": "rarurl参数异常"})
     filename = getParameter('filename')
+    if len(filename)<=0:
+        return jsonify({"code": "异常", "message": "filename参数不能为空"})
     pwdPath = os.getcwd()
     filePath = pwdPath + f"/{filename}.rar"
     dirPath = os.path.dirname(filePath)
