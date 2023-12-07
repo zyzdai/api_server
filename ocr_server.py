@@ -113,7 +113,6 @@ def set_ret(result, ret_type='text'):
 def ocr(opt, img_type='file', ret_type='text'):
     try:
         img = get_img(request, img_type)
-        print(img)
         if opt == 'ocr':
             result = server.classification(img)
         elif opt == 'det':
@@ -218,13 +217,13 @@ def dealAudio():
         return jsonify({"code": "异常", "message": "{}".format(e)})
 
 
-def rar2zip(rar_file):
+def rar2zip(rar_file,filename):
     rar = rarfile.RarFile(rar_file)
     rar.extractall(os.getcwd() + '/')
     rar.close()
     namelist = rar.namelist()
     print(namelist)
-    zip_file = 'tmp.zip'
+    zip_file = f'{filename}.zip'
     compress_files_to_zip(namelist, zip_file)
     for file in namelist:
         os.remove(file)
@@ -240,8 +239,9 @@ def compress_files_to_zip(file_paths, zip_file_path):
 @app.route('/rar')
 def rar():
     rarurl = getParameter('rarurl')
+    filename = getParameter('filename')
     pwdPath = os.getcwd()
-    filePath = pwdPath + "/temp.rar"
+    filePath = pwdPath + f"/{filename}.rar"
     dirPath = os.path.dirname(filePath)
     if not os.path.exists(dirPath):
         os.makedirs(dirPath)
@@ -252,10 +252,8 @@ def rar():
     with open(filePath, 'wb') as f:
         f.write(requests.get(rarurl).content)
         f.close()
-
-    zipName = rar2zip(filePath)
+    zipName = rar2zip(filePath,filename)
     r = os.path.split(filePath)
-    print(r)
     try:
         response = make_response(
             send_from_directory(r[0], zipName, as_attachment=True))
