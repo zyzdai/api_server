@@ -282,8 +282,8 @@ def r2z():
 
 @app.route('/clearzip')
 def clearzip():
-    sec =  getParameter('sec')
-    clear_zip_file(sec)
+    sec = getParameter('sec')
+    clear_zip_file(float(sec))
     return f'清除超过{sec}秒的zip文件!'
 
 @app.route('/tts')
