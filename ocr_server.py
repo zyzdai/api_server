@@ -4,8 +4,8 @@ import base64
 import json
 import os
 import re
+import time
 import zipfile
-
 import ddddocr
 import requests
 import rarfile
@@ -231,8 +231,19 @@ def rar2zip(rar_file,filename):
     compress_files_to_zip(namelist, zip_file)
     for file in namelist:
         os.remove(file)
+    os.remove(rar_file)
+    # 清除超过1天的zip文件
+    clear_zip_file()
     return zip_file
 
+
+def clear_zip_file(sec=86400):
+    zip_file_list = os.listdir(os.getcwd())
+    for file in zip_file_list:
+        if file.endswith('.zip'):
+            zip_file_time = os.path.getmtime(file)
+            if (time.time() - zip_file_time) > sec:
+                os.remove(file)
 
 def compress_files_to_zip(file_paths, zip_file_path):
     with zipfile.ZipFile(zip_file_path, 'w') as zipf:
@@ -269,6 +280,11 @@ def r2z():
     except Exception as e:
         return jsonify({"code": "异常", "message": "{}".format(e)})
 
+@app.route('/clearzip')
+def clearzip():
+    sec =  getParameter('sec')
+    clear_zip_file(sec)
+    return f'清除超过{sec}秒的zip文件!'
 
 @app.route('/tts')
 def index():
