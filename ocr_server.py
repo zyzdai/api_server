@@ -278,7 +278,7 @@ def r2z():
     r = os.path.split(filePath)
     try:
         response = make_response(
-            send_from_directory(r[0], r[1], as_attachment=True))
+            send_from_directory(r[0], zipName, as_attachment=True))
         return response
     except Exception as e:
         return jsonify({"code": "异常", "message": "{}".format(e)})
