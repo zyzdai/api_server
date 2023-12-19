@@ -303,13 +303,13 @@ def getXBogus(ms, data):
     xb = ctx.call('getXBogus', ms, data)
     return xb
     
-def getMsToken(ms, data):
+def getMsToken():
     node = execjs.get()
     with open('xb.js', encoding='utf-8') as f:
         js_code = f.read()
     ctx = node.compile(js_code)
-    xb = ctx.call('getMsToken', ms, data)
-    return xb
+    ms = ctx.call('getMsToken')
+    return ms
     
 @app.route('/getXBogus')
 def xb():
