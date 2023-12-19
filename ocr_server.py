@@ -11,6 +11,7 @@ import requests
 import rarfile
 import uuid
 from flask import Flask, request, jsonify, make_response, send_from_directory
+import execjs
 
 rarfile.UNRAR_TOOL = "./unrar"
 parser = argparse.ArgumentParser(description="使用ddddocr搭建的最简api服务")
@@ -293,6 +294,34 @@ def clearzip():
 def index():
     return 'welcome to my tts!'
 
+
+def getXBogus(ms, data):
+    node = execjs.get()
+    with open('xb.js', encoding='utf-8') as f:
+        js_code = f.read()
+    ctx = node.compile(js_code)
+    xb = ctx.call('getXBogus', ms, data)
+    return xb
+    
+def getMsToken(ms, data):
+    node = execjs.get()
+    with open('xb.js', encoding='utf-8') as f:
+        js_code = f.read()
+    ctx = node.compile(js_code)
+    xb = ctx.call('getMsToken', ms, data)
+    return xb
+    
+@app.route('/getXBogus')
+def xb():
+    msToken = getParameter('msToken')
+    data = getParameter('data')
+    xb = getXBogus(msToken,data)
+    return jsonify({"ms": "{}".format(xb)})
+
+@app.route('/getMsToken')
+def ms():
+    ms = getMsToken()
+    return jsonify({"ms": "{}".format(ms)})
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=args.port)
