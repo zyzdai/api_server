@@ -323,5 +323,68 @@ def ms():
     ms = getMsToken()
     return jsonify({"ms": "{}".format(ms)})
 
+def genshinvoice(Text,Speaker,SDP=0.5,Noise=0.6,Noise_W=0.9,Length=1,Language="auto",Weight=0.7,Yuyi=''):
+    headers = {
+        "content-type": "application/json",
+        "referer": "https://v2.genshinvoice.top/?",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+    url = "https://v2.genshinvoice.top/run/predict"
+    data = {
+        "data": [
+            Text,
+            Speaker,
+            SDP,
+            Noise,
+            Noise_W,
+            Length,
+            Language,
+            None,
+            Yuyi,
+            "Text prompt",
+            "",
+            Weight
+        ],
+        "event_data": None,
+        "fn_index": 0,
+        "session_hash": "2a8v7iq0o0o"
+    }
+    data = json.dumps(data, separators=(',', ':'))
+    response = requests.post(url, headers=headers, data=data)
+    result = response.json()
+    name = result['data'][1]['name']
+    url = 'https://v2.genshinvoice.top/file=' + name
+    return url
+
+
+@app.route('/genshininvoice', methods=['GET', 'POST'])
+def genshininvoice_api():
+    # GET
+    if request.method == 'GET':
+        text = request.args.get('text')
+        speaker = request.args.get('speaker')
+        sdp = request.args.get('sdp')
+        noise = request.args.get('noise')
+        noise_w = request.args.get('noise_w')
+        length = request.args.get('length')
+        language = request.args.get('language')
+        weight = request.args.get('weight')
+        yuyi = request.args.get('yuyi')
+        url = genshinvoice(text, speaker, sdp, noise, noise_w, length, language, weight, yuyi)
+        res = requests.get(url)
+        file_name = f'{uuid.uuid4()}.wav'
+        pwdPath = os.getcwd()
+        filePath = pwdPath + "/" + file_name
+        with open(filePath, 'wb') as f:
+            f.write(res.content)
+        r = os.path.split(filePath)
+        try:
+            response = make_response(
+                send_from_directory(r[0], r[1], as_attachment=True))
+            return response
+        except Exception as e:
+            return jsonify({"code": "异常", "message": "{}".format(e)})
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=args.port)
