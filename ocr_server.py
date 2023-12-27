@@ -244,7 +244,7 @@ def rar2zip(rar_file,filename):
 def clear_zip_file(sec=120):
     zip_file_list = os.listdir(os.getcwd())
     for file in zip_file_list:
-        if file.endswith('.zip') or file.endswith('mp3'):
+        if file.endswith('.zip') or file.endswith('mp3') or file.endswith('wav'):
             zip_file_time = os.path.getmtime(file)
             if (time.time() - zip_file_time) > sec:
                 os.remove(file)
