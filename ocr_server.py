@@ -386,8 +386,6 @@ def genshininvoice_api():
             return response
         except Exception as e:
             return jsonify({"code": "异常", "message": "{}".format(e)})
-# 测试http://127.0.0.1:9898/genshininvoice
-url = 'http://127.0.0.1:9898/genshininvoice?text=你好&speaker=7&sdp=1&noise=0&noise_w=0&length=5&language=1&weight=1&yuyi='
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=args.port)
