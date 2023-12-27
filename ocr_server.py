@@ -244,7 +244,7 @@ def rar2zip(rar_file,filename):
 def clear_zip_file(sec=120):
     zip_file_list = os.listdir(os.getcwd())
     for file in zip_file_list:
-        if file.endswith('.zip') or file.endswith('mp3') or file.endswith('wav'):
+        if file.endswith('.zip') or file.endswith('mp3'):
             zip_file_time = os.path.getmtime(file)
             if (time.time() - zip_file_time) > sec:
                 os.remove(file)
@@ -334,24 +334,26 @@ def genshinvoice(Text,Speaker,SDP=0.5,Noise=0.6,Noise_W=0.9,Length=1,Language="a
         "data": [
             Text,
             Speaker,
-            SDP,
-            Noise,
-            Noise_W,
-            Length,
+            float(SDP),
+            float(Noise),
+            float(Noise_W),
+            float(Length),
             Language,
             None,
             Yuyi,
             "Text prompt",
             "",
-            Weight
+            float(Weight)
         ],
         "event_data": None,
         "fn_index": 0,
         "session_hash": "2a8v7iq0o0o"
     }
+    print(data)
     data = json.dumps(data, separators=(',', ':'))
     response = requests.post(url, headers=headers, data=data)
     result = response.json()
+    print(result)
     name = result['data'][1]['name']
     url = 'https://v2.genshinvoice.top/file=' + name
     return url
@@ -384,7 +386,8 @@ def genshininvoice_api():
             return response
         except Exception as e:
             return jsonify({"code": "异常", "message": "{}".format(e)})
-
+# 测试http://127.0.0.1:9898/genshininvoice
+url = 'http://127.0.0.1:9898/genshininvoice?text=你好&speaker=7&sdp=1&noise=0&noise_w=0&length=5&language=1&weight=1&yuyi='
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=args.port)
