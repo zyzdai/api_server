@@ -387,5 +387,80 @@ def genshininvoice_api():
         except Exception as e:
             return jsonify({"code": "异常", "message": "{}".format(e)})
 
+def AIAudio(Text, Speaker, SDP=0.5, Noise=0.6, Noise_W=0.8, Length=1):
+    headers = {
+        "content-type": "application/json",
+        "referer": "https://v2.genshinvoice.top/?",
+        "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+    Speakers = {"taffy": "Taffy-Bert-VITS2", "TF": "LittleTaffy-Bert-VITS2", "Azuma": "Azuma-Bert-VITS2",
+                "LAPLACE": "LAPLACE-Bert-VITS2", "nine": "nine1-Bert-VITS2",
+                "Carol": "Carol-Bert-VITS2",
+                "otto": "otto-Bert-VITS2",
+                "Nana7mi": "Nana7mi-Bert-VITS2",
+                "XingTong": "XingTong-Bert-VITS2",
+                "Ava": "Ava-Bert-VITS2",
+                "Aatrox": "Aatrox-Bert-VITS2",
+                "Eileen": "Eileen-Bert-VITS2",
+                "Bella": "Bella-Bert-VITS2",
+                "ShanBao": "ShanBao-Bert-VITS2",
+                "Bekki": "Bekki-Bert-VITS2",
+                "Echo": "Echo-Bert-VITS2",
+                "WaiMai": "maimai-Bert-VITS2",
+                "Lumi": "Lumi-Bert-VITS2",
+                "Wenjing": "Wenjing-Bert-VITS2","Diana": "Diana-Bert-VITS2"}
+    url = f"https://www.modelscope.cn/api/v1/studio/xzjosh/{Speakers[Speaker]}/gradio/run/predict"
+    data = {
+        "data": [
+            Text,
+            Speaker,
+            SDP,
+            Noise,
+            Noise_W,
+            Length
+        ],
+        "event_data": None,
+        "fn_index": 0,
+        "dataType": [
+            "textbox",
+            "dropdown",
+            "slider",
+            "slider",
+            "slider",
+            "slider"
+        ],
+        "session_hash": "dltfoxag7rb"
+    }
+    data = json.dumps(data, separators=(',', ':'))
+    response = requests.post(url, headers=headers, data=data)
+    result = response.json()
+    name = result['data'][1]['name']
+    audio = f'https://www.modelscope.cn/api/v1/studio/xzjosh/{Speakers[Speaker]}/gradio/file=' + name
+    return audio
+@app.route('/AIAudio', methods=['GET', 'POST'])
+def aiaudio_api():
+    # GET
+    if request.method == 'GET':
+        text = request.args.get('text')
+        speaker = request.args.get('speaker')
+        sdp = request.args.get('sdp')
+        noise = request.args.get('noise')
+        noise_w = request.args.get('noise_w')
+        length = request.args.get('length')
+        url = AIAudio(text, speaker, sdp, noise, noise_w, lengt)
+        res = requests.get(url)
+        file_name = f'{uuid.uuid4()}.wav'
+        pwdPath = os.getcwd()
+        filePath = pwdPath + "/" + file_name
+        with open(filePath, 'wb') as f:
+            f.write(res.content)
+        r = os.path.split(filePath)
+        try:
+            response = make_response(
+                send_from_directory(r[0], r[1], as_attachment=True))
+            return response
+        except Exception as e:
+            return jsonify({"code": "异常", "message": "{}".format(e)})
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=args.port)
