@@ -450,7 +450,7 @@ def aiaudio_api():
         noise = request.args.get('noise')
         noise_w = request.args.get('noise_w')
         length = request.args.get('length')
-        url = AIAudio(text, speaker, sdp, noise, noise_w, lengt)
+        url = AIAudio(text, speaker, sdp, noise, noise_w, length)
         res = requests.get(url)
         file_name = f'{uuid.uuid4()}.wav'
         pwdPath = os.getcwd()
