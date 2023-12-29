@@ -173,7 +173,6 @@ def remove_html(string):
 
 
 def createAudio(text, file_name, voiceId, rate):
-    clear_zip_file()
     file_name = f'{uuid.uuid4()}.mp3'
     new_text = remove_html(text)
     print(f"Text without html tags: {new_text}")
@@ -206,6 +205,7 @@ def getParameter(paramName):
 
 @app.route('/dealAudio', methods=['POST', 'GET'])
 def dealAudio():
+    clear_zip_file()
     text = getParameter('text')
     if len(text)<=0:
         return jsonify({"code": "异常", "message": "text参数不能为空"})
@@ -257,6 +257,7 @@ def compress_files_to_zip(file_paths, zip_file_path):
 
 @app.route('/rar2zip')
 def r2z():
+    clear_zip_file()
     rarurl = getParameter('rarurl')
     if len(rarurl)<=0 or rarurl.find('http')==-1:
         return jsonify({"code": "异常", "message": "rarurl参数异常"})
@@ -361,6 +362,7 @@ def genshinvoice(Text,Speaker,SDP=0.5,Noise=0.6,Noise_W=0.9,Length=1,Language="a
 
 @app.route('/genshininvoice', methods=['GET', 'POST'])
 def genshininvoice_api():
+    clear_zip_file()
     # GET
     if request.method == 'GET':
         text = request.args.get('text')
@@ -414,10 +416,10 @@ def AIAudio(Text, Speaker, SDP=0.5, Noise=0.6, Noise_W=0.8, Length=1):
         "data": [
             Text,
             Speaker,
-            SDP,
-            Noise,
-            Noise_W,
-            Length
+            float(SDP),
+            float(Noise),
+            float(Noise_W),
+            float(Length)
         ],
         "event_data": None,
         "fn_index": 0,
@@ -439,6 +441,7 @@ def AIAudio(Text, Speaker, SDP=0.5, Noise=0.6, Noise_W=0.8, Length=1):
     return audio
 @app.route('/AIAudio', methods=['GET', 'POST'])
 def aiaudio_api():
+    clear_zip_file()
     # GET
     if request.method == 'GET':
         text = request.args.get('text')
