@@ -13,7 +13,7 @@ import uuid
 from flask import Flask, request, jsonify, make_response, send_from_directory
 import execjs
 
-rarfile.UNRAR_TOOL = "./unrar"
+rarfile.UNRAR_TOOL = "/usr/bin/unrar"
 parser = argparse.ArgumentParser(description="使用ddddocr搭建的最简api服务")
 parser.add_argument("-p", "--port", type=int, default=9898)
 parser.add_argument("--ocr", action="store_true", help="开启ocr识别")
