@@ -6,14 +6,14 @@ import os
 import re
 import time
 import zipfile
+from urllib.parse import quote
+
 import ddddocr
 import requests
 import rarfile
 import uuid
 from flask import Flask, request, jsonify, make_response, send_from_directory
-import execjs
 
-rarfile.UNRAR_TOOL = "/usr/bin/unrar"
 parser = argparse.ArgumentParser(description="使用ddddocr搭建的最简api服务")
 parser.add_argument("-p", "--port", type=int, default=9898)
 parser.add_argument("--ocr", action="store_true", help="开启ocr识别")
@@ -207,10 +207,10 @@ def getParameter(paramName):
 def dealAudio():
     clear_zip_file()
     text = getParameter('text')
-    if len(text)<=0:
+    if len(text) <= 0:
         return jsonify({"code": "异常", "message": "text参数不能为空"})
     file_name = getParameter('file_name')
-    if len(file_name)<=0:
+    if len(file_name) <= 0:
         return jsonify({"code": "异常", "message": "filename参数不能为空"})
     voice = getParameter('voice')
     rate = getParameter('rate')
@@ -225,7 +225,7 @@ def dealAudio():
         return jsonify({"code": "异常", "message": "{}".format(e)})
 
 
-def rar2zip(rar_file,filename):
+def rar2zip(rar_file):
     rar = rarfile.RarFile(rar_file)
     rar.extractall(os.getcwd() + '/')
     rar.close()
@@ -249,6 +249,7 @@ def clear_zip_file(sec=120):
             if (time.time() - zip_file_time) > sec:
                 os.remove(file)
 
+
 def compress_files_to_zip(file_paths, zip_file_path):
     with zipfile.ZipFile(zip_file_path, 'w') as zipf:
         for file_path in file_paths:
@@ -259,10 +260,10 @@ def compress_files_to_zip(file_paths, zip_file_path):
 def r2z():
     clear_zip_file()
     rarurl = getParameter('rarurl')
-    if len(rarurl)<=0 or rarurl.find('http')==-1:
+    if len(rarurl) <= 0 or rarurl.find('http') == -1:
         return jsonify({"code": "异常", "message": "rarurl参数异常"})
     filename = getParameter('filename')
-    if len(filename)<=0:
+    if len(filename) <= 0:
         return jsonify({"code": "异常", "message": "filename参数不能为空"})
     pwdPath = os.getcwd()
     filePath = pwdPath + f"/{filename}.rar"
@@ -272,11 +273,22 @@ def r2z():
     if not os.path.exists(filePath):
         # 用open创建文件 兼容mac
         open(filePath, 'a').close()
+
+    rarurl = quote(rarurl, safe=':/')
     print(rarurl)
-    with open(filePath, 'wb') as f:
-        f.write(requests.get(rarurl).content)
-        f.close()
-    zipName = rar2zip(filePath,filename)
+    # 下载文件
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+    }
+    response = requests.get(rarurl, headers=headers)
+    if response.status_code == 200:
+        with open(filePath, 'wb') as file:
+            file.write(response.content)
+        print(f"文件 {filePath} 下载成功")
+    else:
+        print("下载失败")
+
+    zipName = rar2zip(filePath)
     r = os.path.split(filePath)
     try:
         response = make_response(
@@ -285,46 +297,19 @@ def r2z():
     except Exception as e:
         return jsonify({"code": "异常", "message": "{}".format(e)})
 
+
 @app.route('/clearzip')
 def clearzip():
     sec = getParameter('sec')
     clear_zip_file(float(sec))
     return f'清除超过{sec}秒的zip文件!'
 
+
 @app.route('/tts')
 def index():
     return 'welcome to my tts!'
 
-
-def getXBogus(ms, data):
-    node = execjs.get()
-    with open('xb.js', encoding='utf-8') as f:
-        js_code = f.read()
-    ctx = node.compile(js_code)
-    xb = ctx.call('getXBogus', ms, data)
-    return xb
-    
-def getMsToken():
-    node = execjs.get()
-    with open('xb.js', encoding='utf-8') as f:
-        js_code = f.read()
-    ctx = node.compile(js_code)
-    ms = ctx.call('getMsToken')
-    return ms
-    
-@app.route('/getXBogus')
-def xb():
-    msToken = getParameter('msToken')
-    data = getParameter('data')
-    xb = getXBogus(msToken,data)
-    return jsonify({"ms": "{}".format(xb)})
-
-@app.route('/getMsToken')
-def ms():
-    ms = getMsToken()
-    return jsonify({"ms": "{}".format(ms)})
-
-def genshinvoice(Text,Speaker,SDP=0.5,Noise=0.6,Noise_W=0.9,Length=1,Language="auto",Weight=0.7,Yuyi=''):
+def genshinvoice(Text, Speaker, SDP=0.5, Noise=0.6, Noise_W=0.9, Length=1, Language="auto", Weight=0.7, Yuyi=''):
     headers = {
         "content-type": "application/json",
         "referer": "https://v2.genshinvoice.top/?",
@@ -389,6 +374,7 @@ def genshininvoice_api():
         except Exception as e:
             return jsonify({"code": "异常", "message": "{}".format(e)})
 
+
 def AIAudio(Text, Speaker, SDP=0.5, Noise=0.6, Noise_W=0.8, Length=1):
     headers = {
         "content-type": "application/json",
@@ -410,7 +396,7 @@ def AIAudio(Text, Speaker, SDP=0.5, Noise=0.6, Noise_W=0.8, Length=1):
                 "Echo": "Echo-Bert-VITS2",
                 "WaiMai": "maimai-Bert-VITS2",
                 "Lumi": "Lumi-Bert-VITS2",
-                "Wenjing": "Wenjing-Bert-VITS2","Diana": "Diana-Bert-VITS2"}
+                "Wenjing": "Wenjing-Bert-VITS2", "Diana": "Diana-Bert-VITS2"}
     url = f"https://www.modelscope.cn/api/v1/studio/xzjosh/{Speakers[Speaker]}/gradio/run/predict"
     data = {
         "data": [
@@ -439,6 +425,8 @@ def AIAudio(Text, Speaker, SDP=0.5, Noise=0.6, Noise_W=0.8, Length=1):
     name = result['data'][1]['name']
     audio = f'https://www.modelscope.cn/api/v1/studio/xzjosh/{Speakers[Speaker]}/gradio/file=' + name
     return audio
+
+
 @app.route('/AIAudio', methods=['GET', 'POST'])
 def aiaudio_api():
     clear_zip_file()
@@ -464,6 +452,7 @@ def aiaudio_api():
             return response
         except Exception as e:
             return jsonify({"code": "异常", "message": "{}".format(e)})
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=args.port)
