@@ -470,6 +470,9 @@ def get_num(aid, index):
 
 def on_image_loaded(url):
     # aid = 421536  # 漫画id
+    outfile_name = hashlib.md5(url.encode()).hexdigest() + '.jpg'
+    if  os.path.exists(outfile_name):
+        return outfile_name
     urls = url.split('/')
     aid = urls[-2]
     img_path = urls[-1]
@@ -501,9 +504,10 @@ def on_image_loaded(url):
         region = (0, end_coordinate, img.size[0], end_coordinate + cut_height)
         region_img = img.crop(region)
         canvas.paste(region_img, (0, y_coordinate))
-    outfile = f'{uuid.uuid4()}.jpg'
-    canvas.save(outfile)  # 保存处理后的图片
-    return outfile
+    # 删除img_path文件
+    os.remove(img_path)
+    canvas.save(outfile_name)  # 保存处理后的图片
+    return outfile_name
 
 @app.route('/jm', methods=['GET', 'POST'])
 def jm():
