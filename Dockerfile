@@ -6,7 +6,7 @@ RUN echo ${TZ} > /etc/timezone
 
 RUN mkdir /app
 
-COPY ./unrar ./*.txt ./*.py ./*.sh ./*.onnx /app/
+COPY ./*.txt ./*.py ./*.sh ./*.onnx /app/
 
 
 RUN cd /app \
