@@ -1,7 +1,4 @@
 FROM python:3.8-slim-buster
-ENV TZ Asia/Shanghai
-RUN ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime
-RUN echo ${TZ} > /etc/timezone
 
 RUN mkdir /app
 
