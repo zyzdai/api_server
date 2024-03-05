@@ -487,6 +487,7 @@ def on_image_loaded(url):
             file.write(response.content)
         print(f"文件 {img_path} 下载成功")
     else:
+        print(response.status_code,response.text)
         print("下载失败")
     img = Image.open(img_path)
     canvas = Image.new('RGB', img.size)  # 创建一个与图片大小相同的画布
