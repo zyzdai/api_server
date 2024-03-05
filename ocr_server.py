@@ -475,8 +475,9 @@ def on_image_loaded(url):
         return outfile_name
     urls = url.split('/')
     aid = urls[-2]
-    img_path = urls[-1]
-    print(img_path)
+    img_name = urls[-1]
+    img_path = f'{uuid.uuid4()}.jpg'
+    print(img_name,img_path)
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
     }
@@ -490,7 +491,7 @@ def on_image_loaded(url):
     img = Image.open(img_path)
     canvas = Image.new('RGB', img.size)  # 创建一个与图片大小相同的画布
     canvas.paste(img)  # 将图片粘贴到画布上
-    index = img_path.split(".")[0]  # 获取图片在一组中的index，当前为00002
+    index = img_name.split(".")[0]  # 获取图片在一组中的index，当前为00002
     cut_num = get_num(str(aid), str(index))  # 获取分割次数
     unknown = img.size[1] % cut_num  # 偏移高度，最后一张图的高度会比其他图高度要高
     for m in range(cut_num):
@@ -504,9 +505,9 @@ def on_image_loaded(url):
         region = (0, end_coordinate, img.size[0], end_coordinate + cut_height)
         region_img = img.crop(region)
         canvas.paste(region_img, (0, y_coordinate))
+    canvas.save(outfile_name)  # 保存处理后的图片
     # 删除img_path文件
     os.remove(img_path)
-    canvas.save(outfile_name)  # 保存处理后的图片
     return outfile_name
 
 @app.route('/jm', methods=['GET', 'POST'])
