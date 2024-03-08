@@ -517,7 +517,7 @@ def on_image_loaded(url):
 def decrypt_image(url):
     out_path = f'{uuid.uuid4()}.jpg'
     response = requests.get(url)
-    res = decrypt_image(response.content)
+    res = response.content
     media_key = b'f5d965df75336270'
     media_iv = b'97b60394abc2fbe1'
     cipher = AES.new(media_key, AES.MODE_CBC, iv=media_iv)
