@@ -310,7 +310,7 @@ def clearzip():
 
 
 @app.route('/tts')
-def index():
+def tts():
     return 'welcome to my tts!'
 
 def genshinvoice(Text, Speaker, SDP=0.5, Noise=0.6, Noise_W=0.9, Length=1, Language="auto", Weight=0.7, Yuyi=''):
