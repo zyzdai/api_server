@@ -523,7 +523,7 @@ def decrypt_image(url):
     cipher = AES.new(media_key, AES.MODE_CBC, iv=media_iv)
     decrypted_bytes = cipher.decrypt(res)
     image = Image.open(io.BytesIO(decrypted_bytes))
-    image.save(img_path)
+    image.save(out_path)
     return out_path
 @app.route('/51cg', methods=['GET', 'POST'])
 def cg_decrypt_image():
