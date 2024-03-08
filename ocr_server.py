@@ -14,6 +14,8 @@ import requests
 import rarfile
 import uuid
 from flask import Flask, request, jsonify, make_response, send_from_directory
+from Crypto.Cipher import AES
+import io
 
 parser = argparse.ArgumentParser(description="使用ddddocr搭建的最简api服务")
 parser.add_argument("-p", "--port", type=int, default=9898)
@@ -510,6 +512,33 @@ def on_image_loaded(url):
     # 删除img_path文件
     os.remove(img_path)
     return outfile_name
+
+
+def decrypt_image(url):
+    out_path = f'{uuid.uuid4()}.jpg'
+    response = requests.get(url)
+    res = decrypt_image(response.content)
+    media_key = b'f5d965df75336270'
+    media_iv = b'97b60394abc2fbe1'
+    cipher = AES.new(media_key, AES.MODE_CBC, iv=media_iv)
+    decrypted_bytes = cipher.decrypt(res)
+    image = Image.open(io.BytesIO(decrypted_bytes))
+    image.save(img_path)
+    return out_path
+@app.route('/51cg', methods=['GET', 'POST'])
+def cg_decrypt_image():
+    url = getParameter('url')
+    if len(url) <= 0:
+        return jsonify({"code": "异常", "message": "url参数不能为空"})
+    out_path = decrypt_image(url)
+    r = os.path.split(out_path)
+    try:
+        response = make_response(
+            send_from_directory(r[0], out_path, as_attachment=True))
+        return response
+    except Exception as e:
+        return jsonify({"code": "异常", "message": "{}".format(e)})
+
 
 @app.route('/jm', methods=['GET', 'POST'])
 def jm():
