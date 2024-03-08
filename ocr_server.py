@@ -16,6 +16,7 @@ import uuid
 from flask import Flask, request, jsonify, make_response, send_from_directory
 from Crypto.Cipher import AES
 import io
+from Crypto.Util.Padding import unpad
 
 parser = argparse.ArgumentParser(description="使用ddddocr搭建的最简api服务")
 parser.add_argument("-p", "--port", type=int, default=9898)
@@ -553,6 +554,61 @@ def jm():
         return response
     except Exception as e:
         return jsonify({"code": "异常", "message": "{}".format(e)})
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    return 'OK'
+def aesDecryptImg(url,key,iv,mode):
+    out_path = f'{uuid.uuid4()}.jpg'
+    response = requests.get(url)
+    res = response.content
+    key = key.encode('utf-8')
+    iv = iv.encode('utf-8')
+    if mode == 'CBC':
+        mode = AES.MODE_CBC
+        try:
+            cipher = AES.new(key, mode, iv=iv)
+            decrypted_bytes = cipher.decrypt(res)
+            image = Image.open(io.BytesIO(decrypted_bytes))
+            image.save(out_path)
+            print("Image decrypted successfully!")
+            return out_path
+        except Exception as e:
+            print(f"Error decrypting image: {e}")
+    elif mode == 'ECB':
+        mode = AES.MODE_ECB
+        cipher = AES.new(key, mode)
+        decrypted_bytes = cipher.decrypt(base64.b64decode(res))
+        decrypted_data = unpad(decrypted_bytes, AES.block_size).decode('utf-8').split(',')[1]
+        decrypted_data = base64.b64decode(decrypted_data)
+        # 保存为文件,实现这里
+        with open(out_path, 'wb') as file:
+            file.write(decrypted_data)
+        return out_path
+    else:
+        print("Invalid mode specified. Please use 'ECB' or 'CBC'.")
+@app.route('/aesDecryptImg', methods=['GET', 'POST'])
+def decryptImg():
+    url = getParameter('url')
+    if len(url) <= 0:
+        return jsonify({"code": "异常", "message": "url参数不能为空"})
+    key = getParameter('key')
+    if len(key) <= 0:
+        return jsonify({"code": "异常", "message": "key参数不能为空"})
+    iv = getParameter('iv')
+    if len(iv) <= 0:
+        return jsonify({"code": "异常", "message": "iv参数不能为空"})
+    mode = getParameter('mode')
+    if len(mode) <= 0:
+        return jsonify({"code": "异常", "message": "mode参数不能为空"})
+    out_path = aesDecryptImg(url,key, iv, mode)
+    r = os.path.split(out_path)
+    try:
+        response = make_response(
+            send_from_directory(r[0], out_path, as_attachment=True))
+        return response
+    except Exception as e:
+        return jsonify({"code": "异常", "message": "{}".format(e)})
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=args.port)
